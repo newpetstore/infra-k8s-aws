@@ -8,5 +8,6 @@ echo ''
 
 echo '> > kops'
 kops version
+echo ''
 
-kops delete cluster --name ${NAME} --yes
+kops delete cluster --name "${NAME}" --yes

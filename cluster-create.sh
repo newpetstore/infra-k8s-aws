@@ -8,6 +8,7 @@ echo ''
 
 echo '> > kops'
 kops version
+echo ''
 
 kops create cluster --zones ${ZONES} ${NAME}
 
