@@ -30,21 +30,15 @@ export AWS_ACCESS_KEY_ID='<YOUR ACCESS KEY>'
 export AWS_SECRET_ACCESS_KEY='<YOUR SECRET KEY>'
 ```
 
-- Export your `ZONES` where kubernetes cluster will be created
+- Create a S3 bucket to store kops state
+  - If are familiar with Terraform, [use this](./terraform) to create the bucket
+
+- Edit the `env.sh` script and set the following variables
 ```bash
 # Ohio, for example
 export ZONES='us-east-2a'
-```
-
-- Export your `NAME`, that will be the cluster name
-```bash
 # Use .k8s.local suffix, telling to kops to create a gossip-based cluster
 export NAME='pets.k8s.local'
-```
-- Create a S3 bucket to store kops state
-  - If are familiar with Terraform, [use this](./terraform) to create the bucket
-- Export the S3 bucket name created above
-```bash
 export KOPS_STATE_STORE='s3://YOUR BUCKET NAME'
 ```
 
