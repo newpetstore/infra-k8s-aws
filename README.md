@@ -4,11 +4,12 @@ To create kubernetes cluster at AWS
 
 ## How to Use
 
-- Install [kops](https://github.com/kubernetes/kops) 1.8+
+- Install [kops](https://github.com/kubernetes/kops) 1.15.1
   - For detailed usage, [this tutorial](https://github.com/kubernetes/kops/blob/master/docs/getting_started/aws.md)
  to use kops with AWS
 - Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-linux)
-1.11+
+1.17.0
+- Install [helm](https://helm.sh/docs/intro/install/) 3.0.3
 - Create a ssh keypair
   - kops use the `~/.ssh/id_rsa.pub`, by default
 - Create an account with these IAM permissions:
@@ -46,12 +47,20 @@ export KOPS_STATE_STORE='s3://YOUR BUCKET NAME'
 ```bash
 ./cluster-create.sh
 ```
+- Wait until the cluster is ready to create the resources ahead
 
 ## To create kubernetes dashboard
 
 - Execute the `create-kubedash.sh` script
 ```bash
 ./create-kubedash.sh
+```
+
+- After some seconds, execute command bellow to get the public DNS of that dashboard
+```bash
+kubectl describe svc \
+        kubernetes-dashboard-public \
+       -n kubernetes-dashboard
 ```
 
 ## To create an admin user
@@ -63,9 +72,55 @@ You should use this account to login at kubernetes dashboard.
 ./create-admin.sh
 ```
 
+## To deploy the Prometheus
+
+- Execute the command bellow:
+```bash
+helm install prometheus helm/prometheus
+```
+
+- The Prometheus's server URL will be: `http://prometheus-server.default.svc.cluster.local`
+
+### To access the prometheus web console
+
+```bash
+# Export the pod name
+export POD_NAME=$(kubectl get pods --namespace default -l "app=prometheus,component=server" -o jsonpath="{.items[0].metadata.name}")
+
+# Start the port forwarding
+kubectl --namespace default port-forward $POD_NAME 9090
+```
+
+## To deploy the Grafana
+
+- Execute the command bellow:
+```bash
+helm install grafana helm/grafana
+```
+
+### To access the grafana web console
+
+- Get the admin password
+
+```bash
+kubectl get secret \
+        --namespace default grafana \
+        -o jsonpath="{.data.admin-password}" \
+        | base64 --decode ; echo
+```
+
+- Start the port forwarding
+
+```bash
+# Export the pod name
+export POD_NAME=$(kubectl get pods --namespace default -l "app=grafana,release=grafana" -o jsonpath="{.items[0].metadata.name}")
+
+# Start the port forwarding
+kubectl --namespace default port-forward $POD_NAME 3000
+```
+
 ## To destroy the cluster
 
-- Export the same environment variables
 - Execute the `cluster-delete.sh`
 ```bash
 ./cluster-delete.sh
