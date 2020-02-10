@@ -49,6 +49,11 @@ export KOPS_STATE_STORE='s3://YOUR BUCKET NAME'
 ```
 - Wait until the cluster is ready to create the resources ahead
 
+- To see cluster status
+```bash
+kubectl get nodes
+```
+
 ## To create kubernetes dashboard
 
 - Execute the `create-kubedash.sh` script
@@ -56,7 +61,7 @@ export KOPS_STATE_STORE='s3://YOUR BUCKET NAME'
 ./create-kubedash.sh
 ```
 
-- After some seconds, execute command bellow to get the public DNS of that dashboard
+- After few seconds, execute command bellow to get the public DNS of that dashboard
 ```bash
 kubectl describe svc \
         kubernetes-dashboard-public \
@@ -117,6 +122,41 @@ export POD_NAME=$(kubectl get pods --namespace default -l "app=grafana,release=g
 
 # Start the port forwarding
 kubectl --namespace default port-forward $POD_NAME 3000
+```
+
+## To deploy EFK Stack
+
+- Add the elastic helm charts repository
+```bash
+helm repo add elastic https://helm.elastic.co
+```
+
+- Install the Elasticsearch [(details)](https://github.com/elastic/helm-charts/tree/7.5.2/elasticsearch):
+```bash
+helm install elasticsearch elastic/elasticsearch --version 7.5.2
+```
+
+- Install the Filebeat [(details)](https://github.com/elastic/helm-charts/tree/7.5.2/filebeat):
+```bash
+helm install filebeat elastic/filebeat --version 7.5.2
+```
+
+- Install the Kibana [(details)](https://github.com/elastic/helm-charts/tree/7.5.2/kibana):
+```bash
+helm install kibana elastic/kibana --version 7.5.2
+```
+
+- Expose the Kibana with public DNS:
+```bash
+kubectl expose deployment kibana-kibana \
+        --type=LoadBalancer \
+        --name=kibana-public \
+        -n default
+```
+
+- After few seconds, execute command bellow to get the public DNS of Kibana
+```bash
+kubectl describe svc kibana-public -n default
 ```
 
 ## To destroy the cluster
