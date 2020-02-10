@@ -1,3 +1,5 @@
+#!/bin/bash
+
 kubectl create -f admin.user.yml
 kubectl create -f admin.user.role.yml
 
