@@ -54,6 +54,14 @@ export KOPS_STATE_STORE='s3://YOUR BUCKET NAME'
 kubectl get nodes
 ```
 
+You can go ahead when every node is `Ready`:
+```bash
+NAME                                          STATUS   ROLES    AGE   VERSION
+ip-172-20-37-9.us-east-2.compute.internal     Ready    master   29m   v1.15.9
+ip-172-20-46-165.us-east-2.compute.internal   Ready    node     28m   v1.15.9
+ip-172-20-54-151.us-east-2.compute.internal   Ready    node     28m   v1.15.9
+```
+
 ## To create kubernetes dashboard
 
 - Execute the `create-kubedash.sh` script
@@ -98,30 +106,39 @@ kubectl --namespace default port-forward $POD_NAME 9090
 
 ## To deploy the Grafana
 
+
+- Add the bitnami helm charts repository
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
 - Execute the command bellow:
 ```bash
-helm install grafana helm/grafana
+helm install grafana bitnami/grafana
 ```
 
 ### To access the grafana web console
 
 - Get the admin password
-
 ```bash
-kubectl get secret \
-        --namespace default grafana \
-        -o jsonpath="{.data.admin-password}" \
-        | base64 --decode ; echo
+kubectl get secret grafana-secret \
+        --namespace default \
+        -o jsonpath="{.data.GF_SECURITY_ADMIN_PASSWORD}" | base64 --decode
 ```
 
-- Start the port forwarding
-
+- Expose grafana with a public DNS
 ```bash
-# Export the pod name
-export POD_NAME=$(kubectl get pods --namespace default -l "app=grafana,release=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl expose service grafana \
+      --type=LoadBalancer \
+      --name=grafana-public \
+      -n default
+```
 
-# Start the port forwarding
-kubectl --namespace default port-forward $POD_NAME 3000
+- And get that public DNS
+```bash
+kubectl describe svc \
+      grafana-public \
+     -n default
 ```
 
 ## To deploy EFK Stack
@@ -157,6 +174,38 @@ kubectl expose deployment kibana-kibana \
 - After few seconds, execute command bellow to get the public DNS of Kibana
 ```bash
 kubectl describe svc kibana-public -n default
+```
+
+## Create namespaces for your projects
+
+```bash
+kubectl create namespace 'a-namespace'
+```
+
+## To deploy a mongodb instance
+
+- Execute the command bellow:
+```bash
+helm install --namespace='a-namespace' mongodb-pets helm/mongodb
+```
+
+- Get the root password
+```bash
+kubectl get secret \
+        --namespace='a-namespace' \
+        mongodb \
+        -o jsonpath="{.data.mongodb-root-password}" \
+        | base64 --decode
+```
+
+## To deploy the istio
+
+- Install [istioctl](https://github.com/istio/istio/releases/download/1.4.3/istioctl-1.4.3-linux.tar.gz) 1.4.3
+  - Get [more details](https://istio.io/docs/setup/getting-started/)
+
+- Deploy the istio, running this command:
+```bash
+istioctl manifest apply --set profile=demo
 ```
 
 ## To destroy the cluster
