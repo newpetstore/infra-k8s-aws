@@ -9,6 +9,7 @@ To create kubernetes cluster at AWS
  to use kops with AWS
 - Install [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-linux)
 1.17.0
+  - You may use [kubectl aliases](https://github.com/ahmetb/kubectl-aliases)
 - Install [helm](https://helm.sh/docs/intro/install/) 3.0.3
 - Create a ssh keypair
   - kops use the `~/.ssh/id_rsa.pub`, by default
@@ -62,6 +63,44 @@ ip-172-20-46-165.us-east-2.compute.internal   Ready    node     28m   v1.15.9
 ip-172-20-54-151.us-east-2.compute.internal   Ready    node     28m   v1.15.9
 ```
 
+## To edit kubelet configuration
+
+https://github.com/kubernetes/kops/blob/master/docs/changing_configuration.md
+
+- Open the cluster configuration
+```bash
+source env.sh
+kops edit cluster
+```
+
+- Edit the kubelet spec, to add authenticationTokenWebhook and authorizationMode
+```yaml
+kind: Cluster
+metadata:
+  name: xxx.xxx.com
+spec:
+  # ...
+  kubelet:
+    anonymousAuth: false
+    authenticationTokenWebhook: true
+    authorizationMode: Webhook
+```
+
+- Update the cluster
+```bash
+kops update cluster --yes
+kops rolling-update cluster --yes
+```
+
+## To create the metrics server
+
+The metrics server provide data for [horizontal pod autoscale](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/).
+
+```bash
+helm install --namespace=kube-system \
+     metrics-server helm/metrics-server
+```
+
 ## To create kubernetes dashboard
 
 - Execute the `create-kubedash.sh` script
@@ -105,7 +144,6 @@ kubectl --namespace default port-forward $POD_NAME 9090
 ```
 
 ## To deploy the Grafana
-
 
 - Add the bitnami helm charts repository
 ```bash
@@ -186,7 +224,7 @@ kubectl create namespace 'a-namespace'
 
 - Execute the command bellow:
 ```bash
-helm install --namespace='a-namespace' mongodb-pets helm/mongodb
+helm install --namespace='a-namespace' mongodb helm/mongodb
 ```
 
 - Get the root password
