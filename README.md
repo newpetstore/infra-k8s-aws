@@ -65,7 +65,7 @@ ip-172-20-54-151.us-east-2.compute.internal   Ready    node     28m   v1.15.9
 
 ## To edit kubelet configuration
 
-https://github.com/kubernetes/kops/blob/master/docs/changing_configuration.md
+> Checkout [these details](https://github.com/kubernetes/kops/blob/master/docs/changing_configuration.md)
 
 - Open the cluster configuration
 ```bash
@@ -73,7 +73,8 @@ source env.sh
 kops edit cluster
 ```
 
-- Edit the kubelet spec, to add authenticationTokenWebhook and authorizationMode
+- Edit the kubelet spec, to add `authenticationTokenWebhook` and
+`authorizationMode`
 ```yaml
 kind: Cluster
 metadata:
